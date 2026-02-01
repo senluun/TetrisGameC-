@@ -1,0 +1,114 @@
+@startuml Диаграмма последовательностей - Поворот фигуры
+
+actor Игрок as player
+participant "Program" as prog
+participant "GameEngine" as engine
+participant "Shape\n(currentShape)" as shape
+participant "GameBoard" as board
+
+title Последовательность действий при повороте фигуры
+
+player -> prog : Нажатие ↑ (стрелка вверх)
+activate prog
+
+prog -> engine : Rotate()
+activate engine
+
+engine -> shape : Rotate()
+activate shape
+note right of shape
+  Поворот матрицы на 90°
+  по часовой стрелке
+end note
+shape -> shape : Транспонирование матрицы
+shape --> engine : Фигура повернута
+deactivate shape
+
+engine -> board : IsValidPosition(shape)
+activate board
+note right of board
+  Проверка:
+  • Не выходит за границы
+  • Не пересекается с блоками
+end note
+
+alt Позиция валидна
+    board --> engine : true
+    deactivate board
+    engine --> prog : Поворот выполнен
+    
+else Позиция невалидна (у стены)
+    board --> engine : false
+    deactivate board
+    
+    note over engine
+      Попытка сдвинуть фигуру
+      для корректного поворота
+    end note
+    
+    engine -> shape : MoveLeft()
+    activate shape
+    shape --> engine
+    deactivate shape
+    
+    engine -> board : IsValidPosition(shape)
+    activate board
+    
+    alt Позиция валидна после сдвига влево
+        board --> engine : true
+        deactivate board
+        engine --> prog : Поворот выполнен со сдвигом
+        
+    else Всё ещё невалидна
+        board --> engine : false
+        deactivate board
+        
+        engine -> shape : MoveRight()
+        activate shape
+        shape --> engine
+        deactivate shape
+        
+        engine -> shape : MoveRight()
+        activate shape
+        shape --> engine
+        deactivate shape
+        
+        engine -> board : IsValidPosition(shape)
+        activate board
+        
+        alt Позиция валидна после сдвига вправо
+            board --> engine : true
+            deactivate board
+            engine --> prog : Поворот выполнен со сдвигом
+            
+        else Невозможно повернуть
+            board --> engine : false
+            deactivate board
+            
+            note over engine
+              Отмена поворота:
+              3 поворота по 90° = 270°
+              (возврат к исходной ориентации)
+            end note
+            
+            engine -> shape : MoveLeft()
+            activate shape
+            shape --> engine
+            deactivate shape
+            
+            loop 3 раза
+                engine -> shape : Rotate()
+                activate shape
+                shape --> engine
+                deactivate shape
+            end
+            
+            engine --> prog : Поворот отменён
+        end
+    end
+end
+
+deactivate engine
+deactivate prog
+
+@enduml

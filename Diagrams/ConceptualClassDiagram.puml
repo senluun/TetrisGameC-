@@ -1,0 +1,135 @@
+@startuml
+
+' Стиль
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam packageStyle rectangle
+
+title Концептуальная модель игры Тетрис
+
+' Основные концепции предметной области
+class "Игра" as Game <<Entity>> {
+    Состояние игры
+    Текущий счёт
+    Текущий уровень
+    --
+    Начать игру
+    Завершить игру
+    Обновить состояние
+}
+
+class "Игровое поле" as Field <<Entity>> {
+    Ширина
+    Высота
+    Занятые клетки
+    --
+    Проверить позицию
+    Разместить фигуру
+    Удалить заполненные линии
+}
+
+class "Фигура" as Figure <<Entity>> {
+    Тип фигуры
+    Позиция
+    Ориентация
+    Цвет
+    --
+    Переместить
+    Повернуть
+}
+
+class "Тип фигуры" as FigureType <<Value Object>> {
+    I-фигура (палка)
+    O-фигура (квадрат)
+    T-фигура
+    L-фигура
+    J-фигура
+    S-фигура
+    Z-фигура
+}
+
+class "Позиция" as Position <<Value Object>> {
+    Координата X
+    Координата Y
+}
+
+class "Клетка поля" as Cell <<Value Object>> {
+    Занята/Свободна
+    Цвет (если занята)
+}
+
+class "Счёт" as Score <<Value Object>> {
+    Количество очков
+    --
+    Добавить очки за линии
+    Рассчитать уровень
+}
+
+class "Фабрика фигур" as FigureFactory <<Service>> {
+    Создать случайную фигуру
+}
+
+class "Визуализация" as Visualization <<Service>> {
+    Отобразить игровое поле
+    Отобразить текущую фигуру
+    Отобразить информацию
+}
+
+class "Управление" as Control <<Service>> {
+    Обработать ввод игрока
+    Применить команду
+}
+
+class "Игрок" as Player <<Actor>> {
+    Управляет игрой
+}
+
+' Отношения между концепциями
+Game "1" *-- "1" Field : содержит
+Game "1" *-- "1" Score : имеет
+Game "1" o-- "0..1" Figure : текущая фигура
+Game "1" -- "1" FigureFactory : использует
+
+Field "1" *-- "200" Cell : состоит из
+Figure "1" *-- "1" Position : имеет
+Figure "1" -- "1" FigureType : имеет тип
+
+FigureFactory ..> Figure : создаёт
+FigureFactory ..> FigureType : использует
+
+Visualization ..> Game : отображает
+Visualization ..> Field : отображает
+Visualization ..> Figure : отображает
+
+Control ..> Game : управляет
+Control ..> Figure : перемещает
+
+Player --> Control : использует
+Player --> Visualization : видит
+
+' Примечания
+note right of Game
+  <b>Основная сущность</b>
+  Управляет всей игровой логикой
+  и состоянием игры
+end note
+
+note right of FigureType
+  <b>7 типов фигур</b>
+  Каждый тип имеет уникальную
+  форму и цвет
+end note
+
+note bottom of Field
+  <b>Игровое поле 10×20</b>
+  Хранит информацию о
+  зафиксированных блоках
+end note
+
+note left of FigureFactory
+  <b>Паттерн Factory</b>
+  Инкапсулирует создание
+  различных типов фигур
+end note
+
+@enduml

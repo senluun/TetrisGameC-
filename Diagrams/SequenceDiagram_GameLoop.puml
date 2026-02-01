@@ -1,0 +1,177 @@
+@startuml Диаграмма последовательностей - Игровой цикл
+
+actor Игрок as player
+participant "Program" as prog
+participant "GameEngine" as engine
+participant "ConsoleRenderer" as renderer
+participant "GameBoard" as board
+participant "ShapeFactory" as factory
+participant "Shape" as shape
+
+== Инициализация ==
+player -> prog : Запуск игры
+activate prog
+
+prog -> engine : new GameEngine(10, 20)
+activate engine
+engine -> board : new GameBoard(10, 20)
+activate board
+board --> engine : board
+deactivate board
+
+engine -> factory : new ShapeFactory(10)
+activate factory
+factory --> engine : factory
+deactivate factory
+engine --> prog : engine
+deactivate engine
+
+prog -> renderer : new ConsoleRenderer()
+activate renderer
+renderer --> prog : renderer
+deactivate renderer
+
+prog -> renderer : Initialize()
+activate renderer
+renderer -> renderer : Установка размера консоли
+renderer -> renderer : Console.Clear()
+renderer --> prog
+deactivate renderer
+
+prog -> engine : Start()
+activate engine
+engine -> engine : SpawnNewShape()
+activate engine
+engine -> factory : CreateRandomShape()
+activate factory
+factory -> shape : new IShape/OShape/etc.
+activate shape
+shape --> factory : shape
+deactivate shape
+factory --> engine : shape
+deactivate factory
+engine --> engine
+deactivate engine
+engine --> prog
+deactivate engine
+
+== Основной игровой цикл ==
+loop Пока не Game Over
+    prog -> renderer : DrawGame(engine)
+    activate renderer
+    renderer -> renderer : DrawBoard(board, currentShape)
+    renderer -> renderer : DrawInfo(engine)
+    renderer -> renderer : DrawControls()
+    renderer --> prog
+    deactivate renderer
+
+    alt Время для автоматического падения
+        prog -> engine : MoveDown()
+        activate engine
+        engine -> shape : MoveDown()
+        activate shape
+        shape -> shape : position.Y++
+        shape --> engine
+        deactivate shape
+        
+        engine -> board : IsValidPosition(shape)
+        activate board
+        board --> engine : false (столкновение)
+        deactivate board
+        
+        engine -> shape : position.Y--
+        activate shape
+        shape --> engine
+        deactivate shape
+        
+        engine -> board : PlaceShape(shape)
+        activate board
+        board --> engine
+        deactivate board
+        
+        engine -> board : ClearFullLines()
+        activate board
+        board -> board : RemoveLine(i)
+        board --> engine : linesCleared
+        deactivate board
+        
+        engine -> engine : UpdateScore(linesCleared)
+        
+        engine -> engine : SpawnNewShape()
+        activate engine
+        engine -> factory : CreateRandomShape()
+        activate factory
+        factory --> engine : newShape
+        deactivate factory
+        engine --> engine
+        deactivate engine
+        
+        engine --> prog : false
+        deactivate engine
+    end
+
+    alt Игрок нажал клавишу
+        player -> prog : Нажатие клавиши
+        
+        alt Стрелка влево
+            prog -> engine : MoveLeft()
+            activate engine
+            engine -> shape : MoveLeft()
+            activate shape
+            shape --> engine
+            deactivate shape
+            engine -> board : IsValidPosition(shape)
+            activate board
+            board --> engine : valid
+            deactivate board
+            engine --> prog
+            deactivate engine
+        else Стрелка вправо
+            prog -> engine : MoveRight()
+            activate engine
+            engine -> shape : MoveRight()
+            activate shape
+            shape --> engine
+            deactivate shape
+            engine -> board : IsValidPosition(shape)
+            activate board
+            board --> engine : valid
+            deactivate board
+            engine --> prog
+            deactivate engine
+        else Стрелка вверх
+            prog -> engine : Rotate()
+            activate engine
+            engine -> shape : Rotate()
+            activate shape
+            shape -> shape : Поворот матрицы
+            shape --> engine
+            deactivate shape
+            engine -> board : IsValidPosition(shape)
+            activate board
+            board --> engine : valid
+            deactivate board
+            engine --> prog
+            deactivate engine
+        else Пробел
+            prog -> engine : Drop()
+            activate engine
+            loop Пока можно двигать вниз
+                engine -> engine : MoveDown()
+            end
+            engine --> prog
+            deactivate engine
+        end
+    end
+end
+
+== Завершение игры ==
+prog -> renderer : DrawGame(engine)
+activate renderer
+renderer --> prog
+deactivate renderer
+
+prog -> player : Показать "Game Over"
+deactivate prog
+
+@enduml

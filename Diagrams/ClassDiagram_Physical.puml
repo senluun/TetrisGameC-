@@ -1,0 +1,182 @@
+@startuml Физическая диаграмма классов - Тетрис
+
+' Стиль диаграммы
+skinparam classAttributeIconSize 0
+skinparam classFontSize 11
+skinparam packageStyle rectangle
+
+' Пакет Models - Модели данных
+package "Tetris.Models" {
+    class Point {
+        + X : int
+        + Y : int
+        + Point(x: int, y: int)
+        + Clone() : Point
+    }
+
+    abstract class Shape {
+        # position : Point
+        # matrix : int[,]
+        # color : ConsoleColor
+        + Position : Point {get}
+        + Matrix : int[,] {get}
+        + Color : ConsoleColor {get}
+        # Shape(startX: int, startY: int)
+        + {abstract} Clone() : Shape
+        + {virtual} Rotate() : void
+        + MoveDown() : void
+        + MoveLeft() : void
+        + MoveRight() : void
+    }
+
+    class IShape {
+        + IShape(startX: int, startY: int)
+        + Clone() : Shape
+    }
+
+    class OShape {
+        + OShape(startX: int, startY: int)
+        + Rotate() : void
+        + Clone() : Shape
+    }
+
+    class TShape {
+        + TShape(startX: int, startY: int)
+        + Clone() : Shape
+    }
+
+    class LShape {
+        + LShape(startX: int, startY: int)
+        + Clone() : Shape
+    }
+
+    class JShape {
+        + JShape(startX: int, startY: int)
+        + Clone() : Shape
+    }
+
+    class SShape {
+        + SShape(startX: int, startY: int)
+        + Clone() : Shape
+    }
+
+    class ZShape {
+        + ZShape(startX: int, startY: int)
+        + Clone() : Shape
+    }
+}
+
+' Пакет Core - Игровая логика
+package "Tetris.Core" {
+    class GameBoard {
+        - width : int
+        - height : int
+        - board : int[,]
+        - colors : ConsoleColor[,]
+        + Width : int {get}
+        + Height : int {get}
+        + GameBoard(width: int, height: int)
+        + IsValidPosition(shape: Shape) : bool
+        + PlaceShape(shape: Shape) : void
+        + ClearFullLines() : int
+        - RemoveLine(line: int) : void
+        + GetCell(y: int, x: int) : int
+        + GetColor(y: int, x: int) : ConsoleColor
+    }
+
+    class ShapeFactory {
+        - random : Random
+        - startX : int
+        + ShapeFactory(boardWidth: int)
+        + CreateRandomShape() : Shape
+    }
+
+    class GameEngine {
+        - board : GameBoard
+        - shapeFactory : ShapeFactory
+        - currentShape : Shape
+        - score : int
+        - level : int
+        - isGameOver : bool
+        + Board : GameBoard {get}
+        + CurrentShape : Shape {get}
+        + Score : int {get}
+        + Level : int {get}
+        + IsGameOver : bool {get}
+        + GameEngine(width: int, height: int)
+        + Start() : void
+        - SpawnNewShape() : void
+        + MoveDown() : bool
+        + MoveLeft() : void
+        + MoveRight() : void
+        + Rotate() : void
+        + Drop() : void
+        - UpdateScore(linesCleared: int) : void
+        + GetSpeed() : int
+    }
+}
+
+' Пакет UI - Пользовательский интерфейс
+package "Tetris.UI" {
+    class ConsoleRenderer {
+        - offsetX : int
+        - offsetY : int
+        + ConsoleRenderer(offsetX: int, offsetY: int)
+        + Initialize() : void
+        + DrawGame(engine: GameEngine) : void
+        - DrawBoard(board: GameBoard, currentShape: Shape) : void
+        - DrawInfo(engine: GameEngine) : void
+        - DrawControls() : void
+        + Clear() : void
+    }
+}
+
+' Главный класс
+package "Tetris" {
+    class Program <<static>> {
+        + {static} Main(args: string[]) : void
+    }
+}
+
+' Отношения наследования
+Shape <|-- IShape
+Shape <|-- OShape
+Shape <|-- TShape
+Shape <|-- LShape
+Shape <|-- JShape
+Shape <|-- SShape
+Shape <|-- ZShape
+
+' Композиция и агрегация
+Shape *-- Point : содержит
+GameEngine *-- GameBoard : содержит
+GameEngine *-- ShapeFactory : содержит
+GameEngine o-- Shape : использует
+GameBoard ..> Shape : зависит от
+ShapeFactory ..> Shape : создаёт
+ConsoleRenderer ..> GameEngine : отрисовывает
+ConsoleRenderer ..> GameBoard : отрисовывает
+ConsoleRenderer ..> Shape : отрисовывает
+Program ..> GameEngine : использует
+Program ..> ConsoleRenderer : использует
+
+' Примечания о принципах ООП
+note right of Shape
+  <b>Принципы ООП:</b>
+  • Инкапсуляция: protected поля
+  • Наследование: базовый класс
+  • Полиморфизм: virtual/abstract методы
+end note
+
+note right of GameEngine
+  <b>Инкапсуляция:</b>
+  Скрывает игровую логику,
+  предоставляет публичный API
+end note
+
+note right of ShapeFactory
+  <b>Паттерн Factory:</b>
+  Создание объектов фигур
+end note
+
+@enduml
